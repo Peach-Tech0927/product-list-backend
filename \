@@ -1,0 +1,157 @@
+package main
+
+import "github.com/gin-gonic/gin"
+import "net/http"
+import "database/sql"
+import _ "github.com/lib/pq"
+
+import "log"
+
+func main() {
+    db, err := sql.Open("postgres", "postgres://sugatario:@localhost:5432/crud?sslmode=disable")
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
+
+    r := gin.Default()
+    r.LoadHTMLGlob("templates/*")
+
+    r.StaticFile("/favicon.ico", "templates")
+
+    r.GET("/", func(c *gin.Context) {
+        contents := make(map[int]string)
+        rows, err := db.Query("select id, creator from contents")
+        if err != nil {
+            log.Fatal(err)
+        }
+        defer rows.Close()
+        for rows.Next() {
+            var id int
+            var creator string
+            err = rows.Scan(&id, &creator)
+            if err != nil {
+                log.Fatal(err)
+            }
+            contents[id] = creator
+        }
+        err = rows.Err()
+        if err != nil {
+            log.Fatal(err)
+        }
+        c.HTML(http.StatusOK, "index.tmpl", gin.H {
+            "contents": contents,
+        })
+    })
+
+    r.GET("/:id", func(c *gin.Context) {
+        id := c.Param("id")
+println(id)
+        stmt, err := db.Prepare("select creator from contents where id = $1")
+        if err != nil {
+            log.Fatal(err)
+        }
+        defer stmt.Close()
+        var creator string
+        err = stmt.QueryRow(id).Scan(&creator)
+        if err != nil {
+            log.Fatal(err)
+        }
+        c.HTML(http.StatusOK, "detail.tmpl", gin.H {
+            "creator": creator,
+        })
+    })
+    
+    r.POST("/", func(c *gin.Context) {
+        creator := c.PostForm("creator")
+
+        tx, err := db.Begin()
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        stmt, err := tx.Prepare("insert into contents(creator) values($1)")
+        if err != nil {
+            log.Fatal(err)
+        }
+        defer stmt.Close()
+
+        _, err = stmt.Exec(creator)
+        if err != nil {
+            log.Fatal(err)
+        }
+        err = tx.Commit()
+        if err != nil {
+            log. Fatal(err)
+        }
+
+        c.HTML(http.StatusOK, "detail.tmpl", gin.H {
+            "creator": creator,
+        })
+    })
+
+    r.POST("/:id/update", func(c *gin.Context) {
+        id := c.Param("id")
+        creator := c.PostForm("creator")
+println(id)
+println(creator)
+        tx, err := db.Begin()
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        stmt, err := tx.Prepare("update contents set creator = $1 where id = $2")
+        if err != nil {
+            log.Fatal(err)
+        }
+        defer stmt.Close()
+
+        _, err = stmt.Exec(creator, id)
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        err = tx.Commit()
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        c.HTML(http.StatusOK, "updated.tmpl", gin.H {
+            "creator": creator,
+        })
+    })
+
+    r.POST("/:id/delete", func(c *gin.Context) {
+        id := c.Param("id")
+println("delete")
+println(id)
+        tx, err := db.Begin()
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        stmt, err := tx.Prepare("DELETE FROM contents WHERE id = $1")
+        if err != nil {
+println("error")
+            log.Fatal(err)
+        }
+        defer stmt.Close()
+
+        _, err = stmt.Exec(id)
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        err = tx.Commit()
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        c.HTML(http.StatusOK, "deleted.tmpl", gin.H {
+            "id": id,
+        })
+    })
+
+    r.Run()
+}
+
