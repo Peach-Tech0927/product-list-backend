@@ -80,6 +80,7 @@ func main() {
         if err != nil {
             log.Fatal(err)
         }
+        defer tx.Rollback()
 
         stmt, err := tx.Prepare("insert into contents(creator, title, description) values($1, $2, $3)")
         if err != nil {
@@ -113,6 +114,7 @@ func main() {
         if err != nil {
             log.Fatal(err)
         }
+        defer tx.Rollback()
 
         stmt, err := tx.Prepare("update contents set creator = $1, title =$2, description = $3 where id = $4")
         if err != nil {
@@ -144,6 +146,7 @@ func main() {
         if err != nil {
             log.Fatal(err)
         }
+        defer tx.Rollback()
 
         stmt, err := tx.Prepare("DELETE FROM contents WHERE id = $1")
         if err != nil {
