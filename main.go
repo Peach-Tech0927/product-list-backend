@@ -2,8 +2,8 @@ package main
 
 import "github.com/gin-gonic/gin"
 import "net/http"
-import "database/sql"
-import _ "github.com/lib/pq"
+import "database/sql"//GORMを作る際に必要無くなる？
+import _ "github.com/lib/pq"//GORMを作る際に必要無くなる？
 import "encoding/base64"
 import "log"
 import "io"
