@@ -1,9 +1,13 @@
 <html>
-  <head>
-  </head>
-  <body>
+<head>
+</head>
+<body>
     <ul>
-      <li>creator updated:{{.creator}}</li>
+        <li>Content updated successfully:</li>
+        <li>Creator: {{.content.Creator}}</li>
+        <li>Title: {{.content.Title}}</li>
+        <li>Description: {{.content.Description}}</li>
+        <li><img src="/image/{{.content.ID}}" alt="Content image"></li>
     </ul>
-  </body>
+</body>
 </html>

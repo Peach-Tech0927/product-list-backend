@@ -7,7 +7,6 @@ import _ "github.com/lib/pq"//GORMを作る際に必要無くなる？
 import "encoding/base64"
 import "log"
 import "io"
-import "strconv"
 
 type Content struct {
     ID          int
@@ -81,7 +80,7 @@ func main() {
     })
 
     r.GET("/:id", func(c *gin.Context) {
-        id, _ := strconv.Atoi(c.Param("id"))
+        id := c.Param("id")
 
         stmt, err := db.Prepare("select creator, title, description from contents where id = $1")
         if err != nil {
@@ -95,10 +94,11 @@ func main() {
         if err != nil {
             log.Fatal(err)
         }
-        content.ID = id
         
         c.HTML(http.StatusOK, "detail.tmpl", gin.H {
-            "content": content,
+            "creator": content.Creator,
+            "title": content.Title,
+            "description": content.Description,
         })
     })
     
@@ -157,10 +157,9 @@ func main() {
     })
 
     r.POST("/:id/update", func(c *gin.Context) {
-        id, _ := strconv.Atoi(c.Param("id"))
+        id := c.Param("id")
         var content Content
 
-        content.ID = id
         content.Creator = c.PostForm("creator")
         content.Title = c.PostForm("title")
         content.Description = c.PostForm("description")
@@ -206,7 +205,9 @@ func main() {
         }
 
         c.HTML(http.StatusOK, "updated.tmpl", gin.H {
-            "content": content,
+            "creator": content.Creator,
+            "title": content.Title,
+            "description": content.Description,
         })
     })
 
